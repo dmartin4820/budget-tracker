@@ -1,6 +1,16 @@
 let transactions = [];
 let myChart;
 
+
+//Open database and setup transaction store
+console.log('opening indexedDB')
+const request = window.indexedDB.open('budgetTracker', 1);
+
+request.onupgradeneeded = e => {
+	const db = request.result;
+	db.createObjectStore('transaction', {keyPath: 'date'});
+}
+
 fetch("/api/transaction")
   .then(response => {
     return response.json();
@@ -76,6 +86,16 @@ function populateChart() {
         }]
     }
   });
+}
+
+//saveRecord takes in data while the user is offline and stores it in an
+//the client DB
+function saveRecord(data) {
+	const db = request.result;
+	const transaction = db.transaction(['transaction'], 'readwrite');
+	const budgetTrackerStore = transaction.objectStore('transaction');
+
+	budgetTrackerStore.add(data);
 }
 
 function sendTransaction(isAdding) {
