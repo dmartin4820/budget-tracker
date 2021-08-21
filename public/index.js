@@ -88,6 +88,51 @@ function populateChart() {
   });
 }
 
+//Clear the database once the user is back online
+function clearTransactionDB() {
+	console.log('clear db')
+	const db = request.result;
+	const transaction = db.transaction(['transaction'], 'readwrite');
+	const budgetTrackerStore = transaction.objectStore('transaction');
+
+	budgetTrackerStore.clear().onsuccess = e => {
+		console.log('db cleared')
+	}
+}
+
+//Send all the transactions to the server once the user is back online
+function sendRecordsToServer() {
+	console.log('send to server')
+	const db = request.result;
+	const transaction = db.transaction(['transaction'], 'readwrite');
+	const budgetTrackerStore = transaction.objectStore('transaction');
+
+	const allTransactions = budgetTrackerStore.getAll();
+
+	console.log(allTransactions)
+
+	allTransactions.onsuccess = async e => {
+		try {
+			const response = await fetch("/api/transaction/bulk", {
+  		  method: "POST",
+  		  body: JSON.stringify(allTransactions.result),
+  		  headers: {
+  		    Accept: "application/json, text/plain, */*",
+  		    "Content-Type": "application/json"
+  		  }
+  		});
+
+			if (response.ok) {
+				console.log('transactions saved')
+			} else {//catch any status code other than ok
+				console.log(await response.json())//print err
+			}
+		} catch(err) {
+			console.log(err)
+		}
+	}
+}
+
 //saveRecord takes in data while the user is offline and stores it in an
 //the client DB
 function saveRecord(data) {
@@ -164,6 +209,7 @@ function sendTransaction(isAdding) {
   });
 }
 
+
 document.querySelector("#add-btn").onclick = function() {
   sendTransaction(true);
 };
@@ -171,3 +217,10 @@ document.querySelector("#add-btn").onclick = function() {
 document.querySelector("#sub-btn").onclick = function() {
   sendTransaction(false);
 };
+
+//Check when the user comes back online then send all data to server
+window.addEventListener('online', e => {
+	console.log('online')
+	sendRecordsToServer();
+	clearTransactionDB();
+});
