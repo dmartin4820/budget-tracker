@@ -50,7 +50,6 @@ self.addEventListener('fetch', e => {
 		//If online, fetch from server to keep data on the page updated
 		if (e.request.url.includes('/api/transaction')) {
 			const cache = await caches.open(RUNTIME_CACHE);
-			console.log('hi	')
 			try {
 				const fetchedResponse = await fetch(e.request);
 				cache.put(e.request, fetchedResponse.clone());
