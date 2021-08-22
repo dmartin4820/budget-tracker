@@ -6,6 +6,16 @@ let myChart;
 console.log('opening indexedDB')
 const request = window.indexedDB.open('budgetTracker', 1);
 
+//If the user reopens the page, and has reconnected to the internet
+//populate the server DB and clear the client DB
+if (navigator.onLine) {
+	request.onsuccess = e => {
+		sendRecordsToServer();
+		clearTransactionDB();
+	}
+}
+
+
 request.onupgradeneeded = e => {
 	const db = request.result;
 	db.createObjectStore('transaction', {keyPath: 'date'});
@@ -13,15 +23,22 @@ request.onupgradeneeded = e => {
 
 fetch("/api/transaction")
   .then(response => {
+		console.log('fetch')
     return response.json();
   })
   .then(data => {
     // save db data on global variable
     transactions = data;
 
-    populateTotal();
-    populateTable();
-    populateChart();
+		//If user is offline, populate the chart with data from the client DB
+		if (!navigator.onLine) {
+			console.log('populate offline transactions to chart')
+			getOfflineTransactions()
+		}	else {	
+    		populateTotal();
+    		populateTable();
+    		populateChart();
+		}
   });
 
 function populateTotal() {
@@ -88,6 +105,30 @@ function populateChart() {
   });
 }
 
+async function getOfflineTransactions() {
+	const db = request.result;
+	const transaction = db.transaction(['transaction'], 'readwrite');
+	const budgetTrackerStore = transaction.objectStore('transaction');
+
+	const allTransactions = budgetTrackerStore.getAll();
+
+	allTransactions.onsuccess = e => {
+		let transactionsArr = allTransactions.result;
+		let placeHolderId = 0;
+
+		transactionsArr.forEach(t => {
+			t._id = String(placeHolderId++);
+			t.__v = 0;
+
+			transactions.unshift(t);
+		})
+
+		populateTotal();
+    populateTable();
+    populateChart();
+	}
+}
+
 //Clear the database once the user is back online
 function clearTransactionDB() {
 	console.log('clear db')
@@ -109,24 +150,29 @@ function sendRecordsToServer() {
 
 	const allTransactions = budgetTrackerStore.getAll();
 
-	console.log(allTransactions)
+	// console.log(allTransactions)
 
 	allTransactions.onsuccess = async e => {
 		try {
-			const response = await fetch("/api/transaction/bulk", {
-  		  method: "POST",
-  		  body: JSON.stringify(allTransactions.result),
-  		  headers: {
-  		    Accept: "application/json, text/plain, */*",
-  		    "Content-Type": "application/json"
-  		  }
-  		});
+			if (allTransactions.result.length !== 0) { 
+				const response = await fetch("/api/transaction/bulk", {
+  			  method: "POST",
+  			  body: JSON.stringify(allTransactions.result),
+  			  headers: {
+  			    Accept: "application/json, text/plain, */*",
+  			    "Content-Type": "application/json"
+  			  }
+  			});
 
-			if (response.ok) {
-				console.log('transactions saved')
-			} else {//catch any status code other than ok
-				console.log(await response.json())//print err
+				if (response.ok) {
+					console.log('transactions saved')
+				} else {//catch any status code other than ok
+					console.log(await response.json())//print err
+				}
+			} else {
+				console.log('Nothing to store')
 			}
+
 		} catch(err) {
 			console.log(err)
 		}

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'budget_tracker_cache_1';
-const RUNTIME_CACHE = "budget_tracker_runtime_cache_1";
+const CACHE_NAME = 'budget_tracker_cache_3';
+const RUNTIME_CACHE = "budget_tracker_runtime_cache_3";
 
 const FILES_TO_CACHE = [
 	'/',
-	'./index.html',
-	'./styles.css',
-	'./index.js',
-	'./icons/icon-192x192.png',
-	'./icons/icon-512x512.png'
+	'/index.html',
+	'/styles.css',
+	'/index.js',
+	'/icons/icon-192x192.png',
+	'/icons/icon-512x512.png'
 ]
 
 self.addEventListener('install', e => {
@@ -50,6 +50,7 @@ self.addEventListener('fetch', e => {
 		//If online, fetch from server to keep data on the page updated
 		if (e.request.url.includes('/api/transaction')) {
 			const cache = await caches.open(RUNTIME_CACHE);
+			console.log('hi	')
 			try {
 				const fetchedResponse = await fetch(e.request);
 				cache.put(e.request, fetchedResponse.clone());
