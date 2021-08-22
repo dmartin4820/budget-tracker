@@ -49,18 +49,18 @@ For `GET` requests to the `/api/transaction`, the service worker attempts a fetc
 
 ```javascript
 //If online, fetch from server to keep data on the page updated
-		if (e.request.url.includes('/api/transaction')) {
-			const cache = await caches.open(RUNTIME_CACHE);
-			try {
-				const fetchedResponse = await fetch(e.request);
-				cache.put(e.request, fetchedResponse.clone());
+    if (e.request.url.includes('/api/transaction')) {
+      const cache = await caches.open(RUNTIME_CACHE);
+      try {
+        const fetchedResponse = await fetch(e.request);
+        cache.put(e.request, fetchedResponse.clone());
 
-				return fetchedResponse;
+        return fetchedResponse;
 
-			} catch(err) {
-				return caches.match(e.request);
-			}
-		}
+      } catch(err) {
+        return caches.match(e.request);
+      }
+    }
 ```
 
 
@@ -186,7 +186,7 @@ Find my other projects on [GitHub](https://github.com/dmartin4820)
 Or contact me by email: dom4822@yahoo.com
 
 ## References
-[Service Worker Fundamentals](https://developers.google.com/web/fundamentals/primers/service-workers)
-[MDN Docs Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers)
-[waitUntil](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableEvent/waitUntil)
-[IndexedDB Usage](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB)
+* [Service Worker Fundamentals](https://developers.google.com/web/fundamentals/primers/service-workers)
+* [MDN Docs Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers)
+* [waitUntil](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableEvent/waitUntil)
+* [IndexedDB Usage](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB)
